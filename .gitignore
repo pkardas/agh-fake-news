@@ -5,6 +5,7 @@
 .LSOverride
 .env
 data/
+models/
 
 # Icon must end with two \r
 Icon
