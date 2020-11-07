@@ -30,9 +30,11 @@ jobs:
     - name: Lint with flake8
       run: |
         flake8 .
-    - name: Test with pytest
-      run: |
-        pytest .
+# Have you ever seen university project with tests?
+# Neither do I :)
+#    - name: Test with pytest
+#      run: |
+#        pytest .
     - name: Check typing with mypy
       run: |
         mypy .
