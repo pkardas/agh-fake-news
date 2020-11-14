@@ -270,3 +270,6 @@ dmypy.json
 
 # profiling data
 .prof
+
+### JupyterNotebooks ###
+*/.ipynb_checkpoints/*

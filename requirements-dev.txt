@@ -3,3 +3,4 @@ pytest-cov==2.10.0
 flake8==3.8.3
 mypy==0.782
 jupyterlab==2.2.9
+plotly==4.12.0

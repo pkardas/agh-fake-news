@@ -1,6 +1,7 @@
 import csv
 import re
 from datetime import date, datetime
+from pathlib import Path
 from typing import List, Optional
 
 from src.news import News, Text
@@ -9,10 +10,15 @@ from src.news import News, Text
 def get_news() -> List[News]:
     news = []
 
-    with open("data/fake_and_real_news/True.csv", 'r') as file:
+    src_path = Path(__file__).parent
+
+    true_path = (src_path / "../data/fake_and_real_news/True.csv").resolve()
+    fake_path = (src_path / "../data/fake_and_real_news/Fake.csv").resolve()
+
+    with open(true_path, 'r') as file:
         news += _extract_news_from_csv(file, False)
 
-    with open("data/fake_and_real_news/Fake.csv", 'r') as file:
+    with open(fake_path, 'r') as file:
         news += _extract_news_from_csv(file, True)
 
     return news

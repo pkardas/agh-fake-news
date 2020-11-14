@@ -12,6 +12,9 @@ class Text:
     def __init__(self, text: str):
         self.text = text
 
+    def __str__(self) -> str:
+        return self.text[:120]
+
     @property
     def sentences(self) -> List[str]:
         return sent_tokenize(self.text)

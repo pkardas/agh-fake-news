@@ -6,4 +6,4 @@ setup()
 all_news = get_news()
 
 for news in all_news:
-    print(news.created_at)
+    print(news.title)
