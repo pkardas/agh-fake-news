@@ -13,7 +13,7 @@ class Text:
         self.text = text
 
     def __str__(self) -> str:
-        return self.text[:120]
+        return self.text
 
     @property
     def sentences(self) -> List[str]:
