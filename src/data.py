@@ -36,6 +36,7 @@ def _extract_news_from_csv(file, is_fake):
             created_on=format_date(row["date"])
         )
         for row in data
+        if format_date(row["date"])  # Analysis showed that there are 10 articles without date
     ]
 
 
