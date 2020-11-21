@@ -28,5 +28,3 @@ def get_nouns_per_sentence_ratio():
 
 def get_adjs_per_sentence_ratio():
     raise NotImplementedError
-
-
