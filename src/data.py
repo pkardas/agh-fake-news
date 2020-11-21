@@ -50,13 +50,14 @@ def _extract_news_from_csv(file, is_fake):
 
     return [
         News(
-            title=Text(row["title"]),
-            content=Text(row["text"]),
+            news_id=i,
+            title=Text(f"title-{i}", row["title"]),
+            content=Text(f"content-{i}", row["text"]),
             subject=row["subject"],
             is_fake=is_fake,
             created_on=format_date(row["date"])
         )
-        for row in data
+        for i, row in enumerate(data)
         if format_date(row["date"])  # Analysis showed that there are 10 articles without date
     ]
 

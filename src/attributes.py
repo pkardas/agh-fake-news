@@ -21,6 +21,8 @@ class AttributesAdder(BaseEstimator, TransformerMixin):
     def transform(self, x: List[News]) -> np.array:
         logger.info("Computing lemmas...")
 
+        logger.info(f"{len(x)} news to transform")
+
         documents = [' '.join(news.all_text.lemmas) for news in x]
 
         logger.info("Lemmatisation done, extracting frequency...")

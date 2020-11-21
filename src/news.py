@@ -20,7 +20,8 @@ logger = logging.getLogger()
 
 
 class Text:
-    def __init__(self, text: str):
+    def __init__(self, text_id: str, text: str):
+        self.text_id = text_id
         self.text = clear_text(text)
 
     def __str__(self) -> str:
@@ -29,7 +30,7 @@ class Text:
     def __add__(self, other) -> Text:
         if not isinstance(other, Text):
             return self
-        return Text(self.text + ' ' + other.text)
+        return Text(f"{self.text_id}+{other.text_id}", self.text + ' ' + other.text)
 
     @property
     def sentences(self) -> List[str]:
@@ -54,14 +55,19 @@ class Text:
         """
         # Lemmatisation of all texts take a lot of time,
         # once calculated save result to bin file.
-        saved_lemmas = get_saved_lemmas_for_text(self.text)
+        global all_lemmas
+
+        saved_lemmas = all_lemmas.get(self.text_id, [])
         if saved_lemmas:
+            logger.info(f"Text {self.text_id} lemma available")
             return saved_lemmas
 
         lemmatizer = WordNetLemmatizer()
         lemmas = [lemmatizer.lemmatize(token) for token in self.tokens]
 
-        save_lemmas_for_text(self.text, lemmas)
+        all_lemmas[self.text_id] = lemmas
+
+        logger.info(f"Text {self.text_id} lemmatised")
 
         return lemmas
 
@@ -78,6 +84,7 @@ class Text:
 
 @dataclass
 class News:
+    news_id: int
     title: Text
     content: Text
     subject: str
@@ -106,25 +113,29 @@ def clear_text(text: str) -> str:
     return text
 
 
-def get_saved_lemmas_for_text(text: str) -> List[str]:
-    src_path = Path(__file__).parent
-    pickle_path = (src_path / "../data/lemmas.bin").resolve()
-
-    if path.exists(pickle_path):
-        return pickle.load(open(pickle_path, "rb")).get(text, [])
-
-    return []
+all_lemmas = {}
 
 
-def save_lemmas_for_text(text: str, lemmas: List[str]) -> None:
+def load_lemma():
+    global all_lemmas
+
     src_path = Path(__file__).parent
     pickle_path = (src_path / "../data/lemmas.bin").resolve()
 
     if path.exists(pickle_path):
         all_lemmas = pickle.load(open(pickle_path, "rb"))
+        logger.info("Lemma loaded")
     else:
         all_lemmas = {}
+        logger.info("Lemma unavailable")
 
-    all_lemmas[text] = lemmas
+
+def save_lemma():
+    global all_lemmas
+
+    src_path = Path(__file__).parent
+    pickle_path = (src_path / "../data/lemmas.bin").resolve()
 
     pickle.dump(all_lemmas, open(pickle_path, "wb"))
+
+    logger.info("Lemma saved")
