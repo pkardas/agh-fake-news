@@ -1,16 +1,29 @@
 import csv
+import logging
+import pickle
 import re
 from datetime import date, datetime
 from pathlib import Path
 from typing import List, Optional
+from os import path
+import numpy as np
 
 from src.news import News, Text
 
+logger = logging.getLogger()
+
 
 def get_news() -> List[News]:
+    logger.info("Fetching news...")
+
     news = []
 
     src_path = Path(__file__).parent
+
+    pickle_path = (src_path / "../data/news.bin").resolve()
+    if path.exists(pickle_path):
+        logger.info("News available as binary file, loading...")
+        return pickle.load(open(pickle_path, "rb"))
 
     true_path = (src_path / "../data/fake_and_real_news/True.csv").resolve()
     fake_path = (src_path / "../data/fake_and_real_news/Fake.csv").resolve()
@@ -21,7 +34,15 @@ def get_news() -> List[News]:
     with open(fake_path, 'r') as file:
         news += _extract_news_from_csv(file, True)
 
+    logger.info("Finished fetching news")
+
+    pickle.dump(news, open(pickle_path, "wb"))
+
     return news
+
+
+def get_labels(all_news: List[News]) -> np.array:
+    return np.array([int(news.is_fake) for news in all_news])
 
 
 def _extract_news_from_csv(file, is_fake):

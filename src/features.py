@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from nltk.sentiment import SentimentIntensityAnalyzer
 
 
@@ -17,12 +19,14 @@ def get_unusual_words_ratio():
     """
     Words not appearing in the English dictionary.
     """
-    raise NotImplemented
+    raise NotImplementedError
 
 
 def get_nouns_per_sentence_ratio():
-    raise NotImplemented
+    raise NotImplementedError
 
 
 def get_adjs_per_sentence_ratio():
-    raise NotImplemented
+    raise NotImplementedError
+
+
