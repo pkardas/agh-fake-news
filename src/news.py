@@ -1,28 +1,32 @@
 from __future__ import annotations
 
 import logging
-import pickle
 import re
 from dataclasses import dataclass
 from datetime import date
-from os import path
-from pathlib import Path
 from typing import List
 
+import enchant
+import numpy as np
 from bs4 import BeautifulSoup
 from nltk import sent_tokenize, word_tokenize, WordNetLemmatizer
 from nltk.corpus import stopwords
+from nltk.sentiment import SentimentIntensityAnalyzer
 
-from src.features import get_sentiment
+import src.utils
 from src.models import Sentiment
+from src.utils import return_saved_data
 
 logger = logging.getLogger()
+
+# enchant is much faster than NLTK when it comes to word lookup (C bindings)
+english_dictionary = enchant.Dict("en_US")
 
 
 class Text:
     def __init__(self, text_id: str, text: str):
         self.text_id = text_id
-        self.text = clear_text(text)
+        self.text = _clear_text(text)
 
     def __str__(self) -> str:
         return self.text
@@ -55,9 +59,8 @@ class Text:
         """
         # Lemmatisation of all texts take a lot of time,
         # once calculated save result to bin file.
-        global all_lemmas
 
-        saved_lemmas = all_lemmas.get(self.text_id, [])
+        saved_lemmas = src.utils.all_lemmas.get(self.text_id, [])
         if saved_lemmas:
             logger.info(f"Text {self.text_id} lemma available")
             return saved_lemmas
@@ -65,7 +68,7 @@ class Text:
         lemmatizer = WordNetLemmatizer()
         lemmas = [lemmatizer.lemmatize(token) for token in self.tokens]
 
-        all_lemmas[self.text_id] = lemmas
+        src.utils.all_lemmas[self.text_id] = lemmas
 
         logger.info(f"Text {self.text_id} lemmatised")
 
@@ -73,13 +76,21 @@ class Text:
 
     @property
     def sentiment(self) -> Sentiment:
-        sentiments = [get_sentiment(sentence) for sentence in self.sentences]
+        """
+        Returns sentiment of a sentence.
+         sentiment > 0 - positive feelings,
+         sentiment ~ 0 - neutral feelings,
+         sentiment < 0 - negative feelings.
+
+        Shows bias in both directions.
+        """
+        sentiment_analyzer = SentimentIntensityAnalyzer()
+        sentiments = [
+            sentiment_analyzer.polarity_scores(sentence)["compound"]
+            for sentence in self.sentences
+        ]
 
         return Sentiment(min=min(sentiments), avg=sum(sentiments) / len(sentiments), max=max(sentiments))
-
-    @property
-    def collocations(self):
-        raise NotImplementedError
 
 
 @dataclass
@@ -100,7 +111,33 @@ class News:
         return self.title + self.content
 
 
-def clear_text(text: str) -> str:
+@return_saved_data("misspellings")
+def count_misspellings(all_news: List[News]) -> np.array:
+    """
+    Counts words not appearing in the English dictionary.
+    """
+    return np.array([
+        sum(_is_misspelled(word) for word in news.all_text.lemmas)
+        for news in all_news
+    ])
+
+
+@return_saved_data("news_lengths")
+def news_length(all_news: List[News]) -> np.array:
+    return np.array([
+        len(news.all_text.lemmas)
+        for news in all_news
+    ])
+
+
+def top_frequent_bigrams(all_news: List[News]) -> np.array:
+    """
+    Returns top 10 most frequent bigrams for all news.
+    """
+    raise NotImplementedError
+
+
+def _clear_text(text: str) -> str:
     # Remove links
     text = re.sub(r"http\S+", '', text)
     # Remove HTML
@@ -113,29 +150,14 @@ def clear_text(text: str) -> str:
     return text
 
 
-all_lemmas = {}
+def _is_misspelled(word: str) -> bool:
+    # Enchant is case sensitive when it comes to for example names
+    capitalized = word.capitalize()
+    upper_cased = word.upper()
 
-
-def load_lemma():
-    global all_lemmas
-
-    src_path = Path(__file__).parent
-    pickle_path = (src_path / "../data/lemmas.bin").resolve()
-
-    if path.exists(pickle_path):
-        all_lemmas = pickle.load(open(pickle_path, "rb"))
-        logger.info("Lemma loaded")
-    else:
-        all_lemmas = {}
-        logger.info("Lemma unavailable")
-
-
-def save_lemma():
-    global all_lemmas
-
-    src_path = Path(__file__).parent
-    pickle_path = (src_path / "../data/lemmas.bin").resolve()
-
-    pickle.dump(all_lemmas, open(pickle_path, "wb"))
-
-    logger.info("Lemma saved")
+    is_correct = (
+            english_dictionary.check(word) or
+            english_dictionary.check(capitalized) or
+            english_dictionary.check(upper_cased)
+    )
+    return not is_correct
