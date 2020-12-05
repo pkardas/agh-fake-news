@@ -3,10 +3,12 @@ import logging
 import pickle
 import re
 from datetime import date, datetime
+from os import path
 from pathlib import Path
 from typing import List, Optional
-from os import path
+
 import numpy as np
+from gensim.models import Word2Vec, Phrases
 
 from src.news import News, Text
 
@@ -43,6 +45,24 @@ def get_news() -> List[News]:
 
 def get_labels(all_news: List[News]) -> np.array:
     return np.array([int(news.is_fake) for news in all_news])
+
+
+def get_word_to_vec_model(all_news: List[News]) -> Word2Vec:
+    model_path = str((Path(__file__).parent / "../data/word2vec.model").resolve())  # gensim expects path as string
+
+    if path.exists(model_path):
+        logger.info("Word2Vec model available...")
+        return Word2Vec.load(model_path)
+
+    logger.info("Preparing Word2Vec model...")
+
+    unigrams = [news.all_text.tokens for news in all_news]
+    bigrams = Phrases(unigrams)
+
+    model = Word2Vec(bigrams[unigrams], min_count=1, size=64, workers=4, window=4, sg=1)
+    model.save(model_path)
+
+    return model
 
 
 def _extract_news_from_csv(file, is_fake):

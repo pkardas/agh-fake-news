@@ -7,20 +7,27 @@ from datetime import date
 from typing import List
 
 import enchant
-import numpy as np
 from bs4 import BeautifulSoup
-from nltk import sent_tokenize, word_tokenize, WordNetLemmatizer
+from nltk import sent_tokenize, word_tokenize, WordNetLemmatizer, BigramCollocationFinder, BigramAssocMeasures
 from nltk.corpus import stopwords
 from nltk.sentiment import SentimentIntensityAnalyzer
 
 import src.utils
-from src.models import Sentiment
-from src.utils import return_saved_data
 
 logger = logging.getLogger()
 
 # enchant is much faster than NLTK when it comes to word lookup (C bindings)
 english_dictionary = enchant.Dict("en_US")
+
+
+@dataclass
+class Sentiment:
+    min: float
+    avg: float
+    max: float
+
+    def as_list(self) -> List[float]:
+        return [self.min, self.avg, self.max]
 
 
 class Text:
@@ -92,6 +99,18 @@ class Text:
 
         return Sentiment(min=min(sentiments), avg=sum(sentiments) / len(sentiments), max=max(sentiments))
 
+    @property
+    def bigrams(self) -> List[str]:
+        """
+        Returns list of bigrams, words inside bigrams are space-separated.
+        Returns up to 50 bigrams.
+        """
+        finder = BigramCollocationFinder.from_words(self.tokens)
+        return [
+            f"{word_0}_{word_1}"
+            for word_0, word_1 in finder.nbest(BigramAssocMeasures().pmi, 50)
+        ]
+
 
 @dataclass
 class News:
@@ -111,32 +130,6 @@ class News:
         return self.title + self.content
 
 
-@return_saved_data("misspellings")
-def count_misspellings(all_news: List[News]) -> np.array:
-    """
-    Counts words not appearing in the English dictionary.
-    """
-    return np.array([
-        sum(_is_misspelled(word) for word in news.all_text.lemmas)
-        for news in all_news
-    ])
-
-
-@return_saved_data("news_lengths")
-def news_length(all_news: List[News]) -> np.array:
-    return np.array([
-        len(news.all_text.lemmas)
-        for news in all_news
-    ])
-
-
-def top_frequent_bigrams(all_news: List[News]) -> np.array:
-    """
-    Returns top 10 most frequent bigrams for all news.
-    """
-    raise NotImplementedError
-
-
 def _clear_text(text: str) -> str:
     # Remove links
     text = re.sub(r"http\S+", '', text)
@@ -148,16 +141,3 @@ def _clear_text(text: str) -> str:
     text = text.replace("U.S.", "United States")
 
     return text
-
-
-def _is_misspelled(word: str) -> bool:
-    # Enchant is case sensitive when it comes to for example names
-    capitalized = word.capitalize()
-    upper_cased = word.upper()
-
-    is_correct = (
-            english_dictionary.check(word) or
-            english_dictionary.check(capitalized) or
-            english_dictionary.check(upper_cased)
-    )
-    return not is_correct

@@ -1,57 +1,28 @@
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression, PassiveAggressiveClassifier, SGDClassifier
-from sklearn.metrics import f1_score, roc_auc_score
+from sklearn.metrics import f1_score, roc_auc_score, accuracy_score, recall_score
 from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
 from sklearn.svm import SVC
+from tabulate import tabulate
 
 from src.attributes import pipeline
-from src.data import get_news, get_labels
+from src.data import get_news, get_labels, get_word_to_vec_model
 from src.utils import setup
 
 
-def log_reg(x_train, x_test, y_train, y_test):
-    classifier = LogisticRegression(max_iter=1000)
+def test_classifier(classifier, x_train, x_test, y_train, y_test):
     classifier.fit(x_train, y_train)
     y_pred = classifier.predict(x_test)
-    score = roc_auc_score(y_test, y_pred), f1_score(y_test, y_pred)
 
-    print(score)
+    columns = ["Recall", "Accuracy", "F1", "ROC AUC"]
+    scores = [
+        round(metric(y_test, y_pred), 3) for metric in [recall_score, accuracy_score, f1_score, roc_auc_score]
+    ]
 
-
-def pas_aggr(x_train, x_test, y_train, y_test):
-    classifier = PassiveAggressiveClassifier()
-    classifier.fit(x_train, y_train)
-    y_pred = classifier.predict(x_test)
-    score = roc_auc_score(y_test, y_pred), f1_score(y_test, y_pred)
-
-    print(score)
-
-
-def sdg(x_train, x_test, y_train, y_test):
-    classifier = SGDClassifier()
-    classifier.fit(x_train, y_train)
-    y_pred = classifier.predict(x_test)
-    score = roc_auc_score(y_test, y_pred), f1_score(y_test, y_pred)
-
-    print(score)
-
-
-def random_forrest(x_train, x_test, y_train, y_test):
-    classifier = RandomForestClassifier()
-    classifier.fit(x_train, y_train)
-    y_pred = classifier.predict(x_test)
-    score = roc_auc_score(y_test, y_pred), f1_score(y_test, y_pred)
-
-    print(score)
-
-
-def svc(x_train, x_test, y_train, y_test):
-    classifier = SVC()
-    classifier.fit(x_train, y_train)
-    y_pred = classifier.predict(x_test)
-    score = roc_auc_score(y_test, y_pred), f1_score(y_test, y_pred)
-
-    print(score)
+    print(classifier.__class__.__name__)  # Classifier name should not be extracted like this :P
+    print(tabulate(headers=columns, tabular_data=[scores]))
+    print()
 
 
 @setup
@@ -61,14 +32,15 @@ def main():
 
     transformed_news = pipeline.fit_transform(all_news)
 
-    x_train, x_test, y_train, y_test = train_test_split(transformed_news, labels, shuffle=True, random_state=42)
+    data = train_test_split(transformed_news, labels, shuffle=True, random_state=42)
 
     # Test various classifiers
-    log_reg(x_train, x_test, y_train, y_test)
-    pas_aggr(x_train, x_test, y_train, y_test)
-    sdg(x_train, x_test, y_train, y_test)
-    random_forrest(x_train, x_test, y_train, y_test)
-    svc(x_train, x_test, y_train, y_test)
+    test_classifier(LogisticRegression(max_iter=1000), *data)
+    test_classifier(PassiveAggressiveClassifier(), *data)
+    test_classifier(SGDClassifier(), *data)
+    test_classifier(RandomForestClassifier(), *data)
+    test_classifier(SVC(), *data)
+    test_classifier(GaussianNB(), *data)
 
 
 main()
