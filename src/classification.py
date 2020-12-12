@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from tabulate import tabulate
 
 from src.attributes import pipeline
-from src.data import get_news, get_labels
+from src.data import get_news, get_news_labels
 from src.utils import setup
 
 logger = logging.getLogger()
@@ -63,7 +63,7 @@ def test_combined_classifier(x_train, x_test, y_train, y_test):
 @setup
 def main():
     all_news = get_news()
-    labels = get_labels(all_news)
+    labels = get_news_labels(all_news)
 
     transformed_news = pipeline.fit_transform(all_news)
 
