@@ -6,3 +6,4 @@ pyenchant==3.1.1
 tabulate==0.8.7
 gensim==3.8.3
 cachelib==0.1.1
+plotly==4.14.1

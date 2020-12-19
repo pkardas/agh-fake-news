@@ -24,7 +24,7 @@ SourceTweet = Tuple[UniqueId, TweetId, Delay]
 DestinationTweet = Tuple[UniqueId, TweetId, Delay]
 
 
-def get_news() -> List[News]:
+def get_news(use_local=True) -> List[News]:
     logger.info("Fetching news...")
 
     news = []
@@ -32,7 +32,7 @@ def get_news() -> List[News]:
     src_path = Path(__file__).parent
 
     pickle_path = (src_path / "../data/news.bin").resolve()
-    if path.exists(pickle_path):
+    if use_local and path.exists(pickle_path):
         logger.info("News available as binary file, loading...")
         return pickle.load(open(pickle_path, "rb"))
 
@@ -52,13 +52,13 @@ def get_news() -> List[News]:
     return news
 
 
-def get_tweets() -> List[Tweet]:
+def get_tweets(use_local=True) -> List[Tweet]:
     src_path = Path(__file__).parent
 
     tweets = []
 
     pickle_path = (src_path / "../data/tweets.bin").resolve()
-    if path.exists(pickle_path):
+    if use_local and path.exists(pickle_path):
         logger.info("Tweets available as binary file, loading...")
         return pickle.load(open(pickle_path, "rb"))
 
