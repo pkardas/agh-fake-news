@@ -99,7 +99,7 @@ class Text:
     def subjectivity(self) -> float:
         """
         Positive 'subjectivity' means text is subjective,
-        negative 'subjectivity' means text is objective.
+        'subjectivity' close to 0, means text is objective.
         """
         _, subjectivity = TextBlob(self.text).sentiment
         return subjectivity

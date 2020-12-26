@@ -1,6 +1,9 @@
 import logging
 
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import (
+    RandomForestClassifier, AdaBoostClassifier,
+    GradientBoostingClassifier, ExtraTreesClassifier,
+)
 from sklearn.linear_model import LogisticRegression, PassiveAggressiveClassifier, SGDClassifier
 from sklearn.metrics import f1_score, roc_auc_score, accuracy_score, recall_score, precision_score
 from sklearn.model_selection import train_test_split
@@ -74,6 +77,9 @@ def main():
     test_classifier(PassiveAggressiveClassifier(), *data)
     test_classifier(SGDClassifier(), *data)
     test_classifier(RandomForestClassifier(), *data)
+    test_classifier(AdaBoostClassifier(), *data)
+    test_classifier(GradientBoostingClassifier(), *data)
+    test_classifier(ExtraTreesClassifier(), *data)
     # test_classifier(SVC(), *data)
     # test_classifier(GaussianNB(), *data)
 
