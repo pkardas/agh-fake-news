@@ -198,11 +198,14 @@ def _is_misspelled(word: str) -> bool:
 
     # Use all available sources to determine if word is correct
     is_correct = (
+        # Check using Enchant's dictionary
         english_dictionary.check(word) or
         english_dictionary.check(capitalized) or
         english_dictionary.check(upper_cased) or
+        # Check using NLTK's dictionary
         word in words.words() or
         capitalized in words.words() or
+        # Check using WordNet
         is_in_word_net(word)
     )
     return not is_correct
