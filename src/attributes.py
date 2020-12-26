@@ -2,23 +2,89 @@ import logging
 from typing import List, Optional
 
 import numpy as np
+from nltk import pos_tag
+from nltk.corpus import words, wordnet
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 
 from src.data import get_word_to_vec_model
-from src.news import News, english_dictionary
+from src.news import News, english_dictionary, get_tokens
 from src.utils import return_saved_data
 
 logger = logging.getLogger()
 
 
-@return_saved_data("misspellings")
-def count_misspellings(all_news: List[News]) -> np.array:
+@return_saved_data("num_of_misspellings")
+def num_of_misspellings(all_news: List[News]) -> np.array:
     """
     Counts words not appearing in the English dictionary.
     """
     return np.array([
         sum(_is_misspelled(word) for word in news.all_text.lemmas)
+        for news in all_news
+    ])
+
+
+@return_saved_data("num_of_unique_words")
+def num_of_unique_words(all_news: List[News]) -> np.array:
+    return np.array([
+        len(set(news.all_text.lemmas))
+        for news in all_news
+    ])
+
+
+@return_saved_data("num_of_sentences")
+def num_of_sentences(all_news: List[News]) -> np.array:
+    return np.array([
+        len(news.all_text.sentences)
+        for news in all_news
+    ])
+
+
+@return_saved_data("avg_num_of_adjectives")
+def avg_num_of_adjectives(all_news: List[News]) -> np.array:
+    def get_adjectives(sentences: List[str]):
+        return [
+            word
+            for sentence in sentences
+            for word, tag in pos_tag(get_tokens(sentence))
+            if tag in {"JJ", "JJR", "JJS"}
+        ]
+
+    return np.array([
+        len(get_adjectives(news.all_text.sentences)) / len(news.all_text.sentences)
+        for news in all_news
+    ])
+
+
+@return_saved_data("avg_num_of_verbs")
+def avg_num_of_verbs(all_news: List[News]) -> np.array:
+    def get_verbs(sentences: List[str]):
+        return [
+            word
+            for sentence in sentences
+            for word, tag in pos_tag(get_tokens(sentence))
+            if tag in {"VB", "VBD", "VBG", "VBN", "VBP", "VBZ"}
+        ]
+
+    return np.array([
+        len(get_verbs(news.all_text.sentences)) / len(news.all_text.sentences)
+        for news in all_news
+    ])
+
+
+@return_saved_data("avg_num_of_nouns")
+def avg_num_of_nouns(all_news: List[News]) -> np.array:
+    def get_nouns(sentences: List[str]):
+        return [
+            word
+            for sentence in sentences
+            for word, tag in pos_tag(get_tokens(sentence))
+            if tag in {"NN", "NNS", "NNP", "NNPS"}
+        ]
+
+    return np.array([
+        len(get_nouns(news.all_text.sentences)) / len(news.all_text.sentences)
         for news in all_news
     ])
 
@@ -38,6 +104,14 @@ def news_sentiment(all_news: List[News]) -> np.array:
     """
     return np.array([
         news.all_text.sentiment.as_list()
+        for news in all_news
+    ])
+
+
+@return_saved_data("news_subjectivity")
+def news_subjectivity(all_news: List[News]) -> np.array:
+    return np.array([
+        news.all_text.subjectivity
         for news in all_news
     ])
 
@@ -88,9 +162,15 @@ class AttributesAdder(BaseEstimator, TransformerMixin):
         logger.info(f"{len(x)} news to transform")
 
         result = np.c_[
-            count_misspellings(x),
+            num_of_misspellings(x),
+            num_of_unique_words(x),
+            num_of_sentences(x),
+            avg_num_of_adjectives(x),
+            avg_num_of_nouns(x),
+            avg_num_of_verbs(x),
             news_length(x),
             news_sentiment(x),
+            news_subjectivity(x),
             top_frequent_bigrams(x)
         ]
 
@@ -109,9 +189,20 @@ def _is_misspelled(word: str) -> bool:
     capitalized = word.capitalize()
     upper_cased = word.upper()
 
+    def is_in_word_net(text: str) -> bool:
+        """
+        The only way to guess what a word is without having any context is to use WordNet.
+        """
+        wn_result = wordnet.synsets(text)
+        return wn_result[0].pos() == 'n' if wn_result else False
+
+    # Use all available sources to determine if word is correct
     is_correct = (
-            english_dictionary.check(word) or
-            english_dictionary.check(capitalized) or
-            english_dictionary.check(upper_cased)
+        english_dictionary.check(word) or
+        english_dictionary.check(capitalized) or
+        english_dictionary.check(upper_cased) or
+        word in words.words() or
+        capitalized in words.words() or
+        is_in_word_net(word)
     )
     return not is_correct

@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from nltk import sent_tokenize, word_tokenize, WordNetLemmatizer, BigramCollocationFinder, BigramAssocMeasures
 from nltk.corpus import stopwords
 from nltk.sentiment import SentimentIntensityAnalyzer
+from textblob import TextBlob
 
 import src.utils
 
@@ -52,12 +53,7 @@ class Text:
         """
         Returns list of lowercase tokens without stop words.
         """
-        tokens = word_tokenize(self.text)
-        return [
-            token.lower()
-            for token in tokens
-            if token.isalpha() and token.lower() not in stopwords.words("english")
-        ]
+        return get_tokens(self.text)
 
     @property
     def lemmas(self) -> List[str]:
@@ -100,6 +96,15 @@ class Text:
         return Sentiment(min=min(sentiments), avg=sum(sentiments) / len(sentiments), max=max(sentiments))
 
     @property
+    def subjectivity(self) -> float:
+        """
+        Positive 'subjectivity' means text is subjective,
+        negative 'subjectivity' means text is objective.
+        """
+        _, subjectivity = TextBlob(self.text).sentiment
+        return subjectivity
+
+    @property
     def bigrams(self) -> List[str]:
         """
         Returns list of bigrams, words inside bigrams are space-separated.
@@ -128,6 +133,15 @@ class News:
     @property
     def all_text(self) -> Text:
         return self.title + self.content
+
+
+def get_tokens(text: str) -> List[str]:
+    tokens = word_tokenize(text)
+    return [
+        token.lower()
+        for token in tokens
+        if token.isalpha() and token.lower() not in stopwords.words("english")
+    ]
 
 
 def _clear_text(text: str) -> str:
