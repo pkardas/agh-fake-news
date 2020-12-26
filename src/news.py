@@ -119,7 +119,7 @@ class Text:
 
 @dataclass
 class News:
-    news_id: int
+    news_id: str
     title: Text
     content: Text
     subject: str

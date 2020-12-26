@@ -105,9 +105,9 @@ def _extract_news_from_csv(file, is_fake):
 
     return [
         News(
-            news_id=i,
-            title=Text(f"title-{i}", row["title"]),
-            content=Text(f"content-{i}", row["text"]),
+            news_id=f"news-{i}-{is_fake}",
+            title=Text(f"title-{i}-{is_fake}", row["title"]),
+            content=Text(f"content-{i}-{is_fake}", row["text"]),
             subject=row["subject"],
             is_fake=is_fake,
             created_on=_format_date(row["date"])
