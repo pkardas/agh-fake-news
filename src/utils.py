@@ -6,38 +6,35 @@ from pathlib import Path
 from uuid import uuid4
 
 import nltk
-import numpy as np
 from cachelib import SimpleCache
 
 logger = logging.getLogger()
 
 
-def return_saved_data(file_name: str) -> np.array:
+def return_saved_data(feature_extractor):
     """
     Returns 'data/file_name.bin' if available.
     Otherwise calls 'feature_extractor' and saves data locally.
     """
 
-    def decorator(feature_extractor):
-        @wraps(feature_extractor)
-        def decorated(all_news):
-            pickle_path = (Path(__file__).parent / f"../data/{file_name}.bin").resolve()
+    file_name = feature_extractor.__name__
 
-            if path.exists(pickle_path):
-                logger.info(f"'{file_name}' available")
-                return pickle.load(open(pickle_path, "rb"))
+    def wrapper(all_news):
+        pickle_path = (Path(__file__).parent / f"../data/{file_name}.bin").resolve()
 
-            features = feature_extractor(all_news)
+        if path.exists(pickle_path):
+            logger.info(f"'{file_name}' available")
+            return pickle.load(open(pickle_path, "rb"))
 
-            pickle.dump(features, open(pickle_path, "wb"))
+        features = feature_extractor(all_news)
 
-            logger.info(f"Saved {len(all_news)} '{file_name}'")
+        pickle.dump(features, open(pickle_path, "wb"))
 
-            return features
+        logger.info(f"Saved {len(all_news)} '{file_name}'")
 
-        return decorated
+        return features
 
-    return decorator
+    return wrapper
 
 
 def setup(main):
@@ -58,7 +55,7 @@ def setup(main):
 NO_DATA = f"{uuid4}-NO_DATA"
 
 
-def cached(*, hours=0, minutes=0, key=lambda x: x, threshold=None):
+def cached(*, hours=0, minutes=0, key=lambda x: x):
     """
     Basic caching functionality used for service calls.
      - A decorator, allowing to specify the HOURS (additionally MINUTES) and
@@ -71,19 +68,6 @@ def cached(*, hours=0, minutes=0, key=lambda x: x, threshold=None):
     ```
     """
     timeout = hours * 60 * 60 + minutes * 60
-    if threshold is None:
-        if timeout == 0:
-            # No expiration was set -- we do not want items to be evicted at all
-            # Since we must put a value, let's use something reasonably big
-            threshold = 100_000
-        elif timeout >= 86400:
-            # In most cases, we want caches to last quite some time; in this
-            # case the default value is most probably too small to hold all
-            # necessary data -- so let's put it 20x higher
-            threshold = 10_000
-        else:
-            # Default from SimpleCache
-            threshold = 500
 
     def decorator(func):
         @wraps(func)
@@ -99,7 +83,7 @@ def cached(*, hours=0, minutes=0, key=lambda x: x, threshold=None):
 
             return return_value
 
-        decorated.cache = SimpleCache(threshold=threshold)
+        decorated.cache = SimpleCache()
         return decorated
 
     return decorator

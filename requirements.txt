@@ -11,3 +11,4 @@ networkx==2.5
 bs4==0.0.1
 matplotlib==3.3.3
 textblob==0.15.3
+tqdm==4.55.0

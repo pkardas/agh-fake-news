@@ -32,37 +32,6 @@ def test_classifier(classifier, x_train, x_test, y_train, y_test):
     print()
 
 
-def test_combined_classifier(x_train, x_test, y_train, y_test):
-    log_reg = LogisticRegression(max_iter=1000)
-    sdg = SGDClassifier()
-    forrest = RandomForestClassifier()
-
-    logger.info("Training LogisticRegression")
-    log_reg.fit(x_train, y_train)
-
-    logger.info("Training SGDClassifier")
-    sdg.fit(x_train, y_train)
-
-    logger.info("Training RandomForestClassifier")
-    forrest.fit(x_train, y_train)
-
-    y_pred = [
-        sum(0.33 * classifier.predict([x]) for classifier in [log_reg, sdg, forrest]) > 0.5
-        for x in x_test
-    ]
-
-    columns = ["Recall", "Accuracy", "Precision", "F1", "ROC AUC"]
-    scores = [
-        round(metric(y_test, y_pred), 3) for metric in [
-            recall_score, accuracy_score, precision_score, f1_score, roc_auc_score
-        ]
-    ]
-
-    print("COMBINED CLASSIFIER -- LogisticRegression, SGDClassifier, RandomForestClassifier")
-    print(tabulate(headers=columns, tabular_data=[scores]))
-    print()
-
-
 @setup
 def main():
     all_news = get_news()
@@ -80,10 +49,6 @@ def main():
     test_classifier(AdaBoostClassifier(), *data)
     test_classifier(GradientBoostingClassifier(), *data)
     test_classifier(ExtraTreesClassifier(), *data)
-    # test_classifier(SVC(), *data)
-    # test_classifier(GaussianNB(), *data)
-
-    test_combined_classifier(*data)
 
 
 main()

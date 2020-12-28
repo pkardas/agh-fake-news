@@ -14,7 +14,7 @@ from src.utils import return_saved_data
 logger = logging.getLogger()
 
 
-@return_saved_data("num_of_misspellings")
+@return_saved_data
 def num_of_misspellings(all_news: List[News]) -> np.array:
     """
     Counts words not appearing in the English dictionary.
@@ -25,7 +25,7 @@ def num_of_misspellings(all_news: List[News]) -> np.array:
     ])
 
 
-@return_saved_data("num_of_unique_words")
+@return_saved_data
 def num_of_unique_words(all_news: List[News]) -> np.array:
     return np.array([
         len(set(news.all_text.lemmas))
@@ -33,7 +33,7 @@ def num_of_unique_words(all_news: List[News]) -> np.array:
     ])
 
 
-@return_saved_data("num_of_sentences")
+@return_saved_data
 def num_of_sentences(all_news: List[News]) -> np.array:
     return np.array([
         len(news.all_text.sentences)
@@ -41,7 +41,7 @@ def num_of_sentences(all_news: List[News]) -> np.array:
     ])
 
 
-@return_saved_data("avg_num_of_adjectives")
+@return_saved_data
 def avg_num_of_adjectives(all_news: List[News]) -> np.array:
     def get_adjectives(sentences: List[str]):
         return [
@@ -57,7 +57,7 @@ def avg_num_of_adjectives(all_news: List[News]) -> np.array:
     ])
 
 
-@return_saved_data("avg_num_of_verbs")
+@return_saved_data
 def avg_num_of_verbs(all_news: List[News]) -> np.array:
     def get_verbs(sentences: List[str]):
         return [
@@ -73,7 +73,7 @@ def avg_num_of_verbs(all_news: List[News]) -> np.array:
     ])
 
 
-@return_saved_data("avg_num_of_nouns")
+@return_saved_data
 def avg_num_of_nouns(all_news: List[News]) -> np.array:
     def get_nouns(sentences: List[str]):
         return [
@@ -89,7 +89,7 @@ def avg_num_of_nouns(all_news: List[News]) -> np.array:
     ])
 
 
-@return_saved_data("news_lengths")
+@return_saved_data
 def news_length(all_news: List[News]) -> np.array:
     return np.array([
         len(news.all_text.lemmas)
@@ -97,7 +97,7 @@ def news_length(all_news: List[News]) -> np.array:
     ])
 
 
-@return_saved_data("news_sentiment")
+@return_saved_data
 def news_sentiment(all_news: List[News]) -> np.array:
     """
     For every news returns 3 attributes - min, avg and max sentiment.
@@ -108,7 +108,7 @@ def news_sentiment(all_news: List[News]) -> np.array:
     ])
 
 
-@return_saved_data("news_subjectivity")
+@return_saved_data
 def news_subjectivity(all_news: List[News]) -> np.array:
     return np.array([
         news.all_text.subjectivity
@@ -116,7 +116,7 @@ def news_subjectivity(all_news: List[News]) -> np.array:
     ])
 
 
-@return_saved_data("top_frequent_bigrams")
+@return_saved_data
 def top_frequent_bigrams(all_news: List[News]) -> np.array:
     """
     Returns top 10 most frequent bigrams for all news.
