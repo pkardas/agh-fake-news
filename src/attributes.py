@@ -6,6 +6,7 @@ from nltk import pos_tag
 from nltk.corpus import words, wordnet
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
+from tqdm import tqdm
 
 from src.data import get_word_to_vec_model
 from src.news import News, english_dictionary, get_tokens
@@ -21,7 +22,7 @@ def num_of_misspellings(all_news: List[News]) -> np.array:
     """
     return np.array([
         sum(_is_misspelled(word) for word in news.all_text.lemmas)
-        for news in all_news
+        for news in tqdm(all_news)
     ])
 
 
@@ -29,7 +30,7 @@ def num_of_misspellings(all_news: List[News]) -> np.array:
 def num_of_unique_words(all_news: List[News]) -> np.array:
     return np.array([
         len(set(news.all_text.lemmas))
-        for news in all_news
+        for news in tqdm(all_news)
     ])
 
 
@@ -37,7 +38,7 @@ def num_of_unique_words(all_news: List[News]) -> np.array:
 def num_of_sentences(all_news: List[News]) -> np.array:
     return np.array([
         len(news.all_text.sentences)
-        for news in all_news
+        for news in tqdm(all_news)
     ])
 
 
@@ -53,7 +54,7 @@ def avg_num_of_adjectives(all_news: List[News]) -> np.array:
 
     return np.array([
         len(get_adjectives(news.all_text.sentences)) / len(news.all_text.sentences)
-        for news in all_news
+        for news in tqdm(all_news)
     ])
 
 
@@ -69,7 +70,7 @@ def avg_num_of_verbs(all_news: List[News]) -> np.array:
 
     return np.array([
         len(get_verbs(news.all_text.sentences)) / len(news.all_text.sentences)
-        for news in all_news
+        for news in tqdm(all_news)
     ])
 
 
@@ -85,7 +86,7 @@ def avg_num_of_nouns(all_news: List[News]) -> np.array:
 
     return np.array([
         len(get_nouns(news.all_text.sentences)) / len(news.all_text.sentences)
-        for news in all_news
+        for news in tqdm(all_news)
     ])
 
 
@@ -93,7 +94,7 @@ def avg_num_of_nouns(all_news: List[News]) -> np.array:
 def news_length(all_news: List[News]) -> np.array:
     return np.array([
         len(news.all_text.lemmas)
-        for news in all_news
+        for news in tqdm(all_news)
     ])
 
 
@@ -104,7 +105,7 @@ def news_sentiment(all_news: List[News]) -> np.array:
     """
     return np.array([
         news.all_text.sentiment.as_list()
-        for news in all_news
+        for news in tqdm(all_news)
     ])
 
 
@@ -112,7 +113,7 @@ def news_sentiment(all_news: List[News]) -> np.array:
 def news_subjectivity(all_news: List[News]) -> np.array:
     return np.array([
         news.all_text.subjectivity
-        for news in all_news
+        for news in tqdm(all_news)
     ])
 
 
@@ -128,7 +129,7 @@ def top_frequent_bigrams(all_news: List[News]) -> np.array:
 
     bigrams = []
 
-    for news in all_news:
+    for news in tqdm(all_news):
         news_vec_bigrams = []
         news_bigrams = news.all_text.bigrams
 
