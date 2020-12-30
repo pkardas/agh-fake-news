@@ -8,7 +8,6 @@ from typing import List, Tuple
 
 import numpy as np
 from gensim.models import Word2Vec, Phrases
-from tqdm import tqdm
 
 from src.news import News, Text
 from src.tweets import Tweet, TweetType
