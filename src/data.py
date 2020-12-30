@@ -1,12 +1,14 @@
 import csv
 import logging
 import pickle
+import sys
 from os import path, walk
 from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
 from gensim.models import Word2Vec, Phrases
+from tqdm import tqdm
 
 from src.news import News, Text
 from src.tweets import Tweet, TweetType
@@ -34,6 +36,10 @@ def get_news(dataset: NewsDataset, use_local: bool = True) -> List[News]:
 
     if dataset is NewsDataset.DATASET_0:
         news = _get_dataset_0()
+    if dataset is NewsDataset.DATASET_1:
+        news = _get_dataset_1()
+    if dataset is NewsDataset.DATASET_2:
+        news = _get_dataset_2()
 
     logger.info("Finished fetching news")
 
@@ -96,27 +102,61 @@ def _get_dataset_0() -> List[News]:
     true_path = (Path(__file__).parent / "../data/dataset_0/True.csv").resolve()
     fake_path = (Path(__file__).parent / "../data/dataset_0/Fake.csv").resolve()
 
-    def extract_news_from_csv(news_file, is_fake):
-        data = csv.DictReader(news_file)
+    with open(true_path, 'r') as file:
+        news += _extract_news_from_csv(file, False)
+
+    with open(fake_path, 'r') as file:
+        news += _extract_news_from_csv(file, True)
+
+    return news
+
+
+def _get_dataset_1() -> List[News]:
+    news = []
+    true_path = (Path(__file__).parent / "../data/dataset_1/True.csv").resolve()
+    fake_path = (Path(__file__).parent / "../data/dataset_1/Fake.csv").resolve()
+
+    with open(true_path, 'r') as file:
+        news += _extract_news_from_csv(file, False)
+
+    with open(fake_path, 'r') as file:
+        news += _extract_news_from_csv(file, True)
+
+    return news
+
+
+def _get_dataset_2() -> List[News]:
+    csv.field_size_limit(sys.maxsize)
+
+    def str_to_bool(text: str) -> bool:
+        return bool(int(text))
+
+    with open((Path(__file__).parent / "../data/dataset_2.csv").resolve(), 'r') as file:
+        data = csv.DictReader(file)
 
         return [
             News(
-                news_id=f"news-{i}-{is_fake}",
-                title=Text(f"title-{i}-{is_fake}", row["title"]),
-                content=Text(f"content-{i}-{is_fake}", row["text"]),
-                subject=row["subject"],
-                is_fake=is_fake,
+                news_id=f"news-{i}-{str_to_bool(row['label'])}",
+                title=Text(f"title-{i}-{str_to_bool(row['label'])}", row["title"]),
+                content=Text(f"content-{i}-{str_to_bool(row['label'])}", row["text"]),
+                is_fake=str_to_bool(row["label"]),
             )
             for i, row in enumerate(data)
         ]
 
-    with open(true_path, 'r') as file:
-        news += extract_news_from_csv(file, False)
 
-    with open(fake_path, 'r') as file:
-        news += extract_news_from_csv(file, True)
+def _extract_news_from_csv(news_file, is_fake):
+    data = csv.DictReader(news_file)
 
-    return news
+    return [
+        News(
+            news_id=f"news-{i}-{is_fake}",
+            title=Text(f"title-{i}-{is_fake}", row["title"]),
+            content=Text(f"content-{i}-{is_fake}", row["text"]),
+            is_fake=is_fake,
+        )
+        for i, row in enumerate(data)
+    ]
 
 
 def _build_tweet(tweet_history: List[Tuple[SourceTweet, DestinationTweet]]) -> Tweet:

@@ -121,7 +121,6 @@ class News:
     news_id: str
     title: Text
     content: Text
-    subject: str
     is_fake: bool
 
     @property

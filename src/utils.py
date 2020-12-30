@@ -13,10 +13,12 @@ logger = logging.getLogger()
 
 
 class NewsDataset(str, Enum):
-    DATASET_0 = "dataset_0"  # https://www.kaggle.com/clmentbisaillon/fake-and-real-news-dataset
+    DATASET_0 = "dataset_0"  # Kaggle, True and Fake news, 45k items
+    DATASET_1 = "dataset_1"  # BuzzFeed, True and Fake news, ~180 items
+    DATASET_2 = "dataset_2"  # Kaggle, True and Fake news, 26k items
 
 
-SELECTED_DATASET = NewsDataset.DATASET_0
+SELECTED_DATASET = NewsDataset.DATASET_2
 
 
 def return_saved_data(feature_extractor):
@@ -34,7 +36,7 @@ def return_saved_data(feature_extractor):
             logger.info(f"'{file_name}' available")
             return pickle.load(open(pickle_path, "rb"))
 
-        features = feature_extractor(all_news)
+        features = feature_extractor(all_news, dataset)
 
         pickle.dump(features, open(pickle_path, "wb"))
 
@@ -103,7 +105,7 @@ all_lemmas = {}
 def _load_lemma():
     global all_lemmas
 
-    pickle_path = (Path(__file__).parent / "../data/lemmas.bin").resolve()
+    pickle_path = (Path(__file__).parent / f"../data/lemmas-{SELECTED_DATASET}.bin").resolve()
 
     if path.exists(pickle_path):
         all_lemmas = pickle.load(open(pickle_path, "rb"))
@@ -116,7 +118,7 @@ def _load_lemma():
 def _save_lemma():
     global all_lemmas
 
-    pickle_path = (Path(__file__).parent / "../data/lemmas.bin").resolve()
+    pickle_path = (Path(__file__).parent / f"../data/lemmas-{SELECTED_DATASET}.bin").resolve()
 
     pickle.dump(all_lemmas, open(pickle_path, "wb"))
 
