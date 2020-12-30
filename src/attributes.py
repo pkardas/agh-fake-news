@@ -10,13 +10,13 @@ from tqdm import tqdm
 
 from src.data import get_word_to_vec_model
 from src.news import News, english_dictionary, get_tokens
-from src.utils import return_saved_data
+from src.utils import return_saved_data, NewsDataset, SELECTED_DATASET
 
 logger = logging.getLogger()
 
 
 @return_saved_data
-def num_of_misspellings(all_news: List[News]) -> np.array:
+def num_of_misspellings(all_news: List[News], _: NewsDataset) -> np.array:
     """
     Counts words not appearing in the English dictionary.
     """
@@ -27,7 +27,7 @@ def num_of_misspellings(all_news: List[News]) -> np.array:
 
 
 @return_saved_data
-def num_of_unique_words(all_news: List[News]) -> np.array:
+def num_of_unique_words(all_news: List[News], _: NewsDataset) -> np.array:
     return np.array([
         len(set(news.all_text.lemmas))
         for news in tqdm(all_news)
@@ -35,7 +35,7 @@ def num_of_unique_words(all_news: List[News]) -> np.array:
 
 
 @return_saved_data
-def num_of_sentences(all_news: List[News]) -> np.array:
+def num_of_sentences(all_news: List[News], _: NewsDataset) -> np.array:
     return np.array([
         len(news.all_text.sentences)
         for news in tqdm(all_news)
@@ -43,7 +43,7 @@ def num_of_sentences(all_news: List[News]) -> np.array:
 
 
 @return_saved_data
-def avg_num_of_adjectives(all_news: List[News]) -> np.array:
+def avg_num_of_adjectives(all_news: List[News], _: NewsDataset) -> np.array:
     def get_adjectives(sentences: List[str]):
         return [
             word
@@ -59,7 +59,7 @@ def avg_num_of_adjectives(all_news: List[News]) -> np.array:
 
 
 @return_saved_data
-def avg_num_of_verbs(all_news: List[News]) -> np.array:
+def avg_num_of_verbs(all_news: List[News], _: NewsDataset) -> np.array:
     def get_verbs(sentences: List[str]):
         return [
             word
@@ -75,7 +75,7 @@ def avg_num_of_verbs(all_news: List[News]) -> np.array:
 
 
 @return_saved_data
-def avg_num_of_nouns(all_news: List[News]) -> np.array:
+def avg_num_of_nouns(all_news: List[News], _: NewsDataset) -> np.array:
     def get_nouns(sentences: List[str]):
         return [
             word
@@ -91,7 +91,7 @@ def avg_num_of_nouns(all_news: List[News]) -> np.array:
 
 
 @return_saved_data
-def news_length(all_news: List[News]) -> np.array:
+def news_length(all_news: List[News], _: NewsDataset) -> np.array:
     return np.array([
         len(news.all_text.lemmas)
         for news in tqdm(all_news)
@@ -99,7 +99,7 @@ def news_length(all_news: List[News]) -> np.array:
 
 
 @return_saved_data
-def news_sentiment(all_news: List[News]) -> np.array:
+def news_sentiment(all_news: List[News], _: NewsDataset) -> np.array:
     """
     For every news returns 3 attributes - min, avg and max sentiment.
     """
@@ -110,7 +110,7 @@ def news_sentiment(all_news: List[News]) -> np.array:
 
 
 @return_saved_data
-def news_subjectivity(all_news: List[News]) -> np.array:
+def news_subjectivity(all_news: List[News], _: NewsDataset) -> np.array:
     return np.array([
         news.all_text.subjectivity
         for news in tqdm(all_news)
@@ -118,11 +118,11 @@ def news_subjectivity(all_news: List[News]) -> np.array:
 
 
 @return_saved_data
-def top_frequent_bigrams(all_news: List[News]) -> np.array:
+def top_frequent_bigrams(all_news: List[News], dataset: NewsDataset) -> np.array:
     """
     Returns top 10 most frequent bigrams for all news.
     """
-    model = get_word_to_vec_model(all_news)
+    model = get_word_to_vec_model(all_news, dataset)
 
     def bigram_to_vec(bigram: str) -> Optional[np.array]:
         return model.wv[bigram] if bigram in model.wv else None
@@ -155,24 +155,26 @@ def top_frequent_bigrams(all_news: List[News]) -> np.array:
 
 
 class AttributesAdder(BaseEstimator, TransformerMixin):
+    def __init__(self, dataset: NewsDataset):
+        self.dataset = dataset
+
     def fit(self, x, y=None):
         return self
 
-    # noinspection PyMethodMayBeStatic
     def transform(self, x: List[News]) -> np.array:
         logger.info(f"{len(x)} news to transform")
 
         result = np.c_[
-            num_of_misspellings(x),
-            num_of_unique_words(x),
-            num_of_sentences(x),
-            avg_num_of_adjectives(x),
-            avg_num_of_nouns(x),
-            avg_num_of_verbs(x),
-            news_length(x),
-            news_sentiment(x),
-            news_subjectivity(x),
-            top_frequent_bigrams(x)
+            num_of_misspellings(x, self.dataset),
+            num_of_unique_words(x, self.dataset),
+            num_of_sentences(x, self.dataset),
+            avg_num_of_adjectives(x, self.dataset),
+            avg_num_of_nouns(x, self.dataset),
+            avg_num_of_verbs(x, self.dataset),
+            news_length(x, self.dataset),
+            news_sentiment(x, self.dataset),
+            news_subjectivity(x, self.dataset),
+            top_frequent_bigrams(x, self.dataset)
         ]
 
         logger.info("Finished extracting features")
@@ -181,7 +183,7 @@ class AttributesAdder(BaseEstimator, TransformerMixin):
 
 
 pipeline = Pipeline([
-    ("attrs_adder", AttributesAdder()),
+    ("attrs_adder", AttributesAdder(SELECTED_DATASET)),
 ])
 
 

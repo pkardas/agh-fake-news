@@ -1,5 +1,6 @@
 import logging
 import pickle
+from enum import Enum
 from functools import wraps
 from os import path
 from pathlib import Path
@@ -11,6 +12,13 @@ from cachelib import SimpleCache
 logger = logging.getLogger()
 
 
+class NewsDataset(str, Enum):
+    DATASET_0 = "dataset_0"  # https://www.kaggle.com/clmentbisaillon/fake-and-real-news-dataset
+
+
+SELECTED_DATASET = NewsDataset.DATASET_0
+
+
 def return_saved_data(feature_extractor):
     """
     Returns 'data/file_name.bin' if available.
@@ -19,8 +27,8 @@ def return_saved_data(feature_extractor):
 
     file_name = feature_extractor.__name__
 
-    def wrapper(all_news):
-        pickle_path = (Path(__file__).parent / f"../data/{file_name}.bin").resolve()
+    def wrapper(all_news, dataset):
+        pickle_path = (Path(__file__).parent / f"../data/{file_name}-{dataset}.bin").resolve()
 
         if path.exists(pickle_path):
             logger.info(f"'{file_name}' available")

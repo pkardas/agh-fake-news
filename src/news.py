@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
-from datetime import date
 from typing import List
 
 import enchant
@@ -124,7 +123,6 @@ class News:
     content: Text
     subject: str
     is_fake: bool
-    created_on: date
 
     @property
     def is_true(self) -> bool:

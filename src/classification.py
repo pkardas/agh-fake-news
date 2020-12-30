@@ -10,7 +10,7 @@ from tabulate import tabulate
 
 from src.attributes import pipeline
 from src.data import get_news, get_news_labels
-from src.utils import setup
+from src.utils import setup, SELECTED_DATASET
 
 logger = logging.getLogger()
 
@@ -33,7 +33,7 @@ def check_classifier(classifier, x_train, x_test, y_train, y_test):
 
 @setup
 def main():
-    all_news = get_news()
+    all_news = get_news(SELECTED_DATASET)
     labels = get_news_labels(all_news)
 
     transformed_news = pipeline.fit_transform(all_news)

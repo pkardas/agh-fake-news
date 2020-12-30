@@ -1,18 +1,16 @@
 import csv
 import logging
 import pickle
-import re
-from datetime import date, datetime
 from os import path, walk
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import numpy as np
 from gensim.models import Word2Vec, Phrases
 
 from src.news import News, Text
 from src.tweets import Tweet, TweetType
-from src.utils import cached
+from src.utils import cached, NewsDataset
 
 logger = logging.getLogger()
 
@@ -24,26 +22,18 @@ SourceTweet = Tuple[UniqueId, TweetId, Delay]
 DestinationTweet = Tuple[UniqueId, TweetId, Delay]
 
 
-def get_news(use_local=True) -> List[News]:
+def get_news(dataset: NewsDataset, use_local: bool = True) -> List[News]:
     logger.info("Fetching news...")
 
-    news = []
-
-    src_path = Path(__file__).parent
-
-    pickle_path = (src_path / "../data/news.bin").resolve()
+    pickle_path = (Path(__file__).parent / f"../data/news-{dataset}.bin").resolve()
     if use_local and path.exists(pickle_path):
         logger.info("News available as binary file, loading...")
         return pickle.load(open(pickle_path, "rb"))
 
-    true_path = (src_path / "../data/fake_and_real_news/True.csv").resolve()
-    fake_path = (src_path / "../data/fake_and_real_news/Fake.csv").resolve()
+    news = []
 
-    with open(true_path, 'r') as file:
-        news += _extract_news_from_csv(file, False)
-
-    with open(fake_path, 'r') as file:
-        news += _extract_news_from_csv(file, True)
+    if dataset is NewsDataset.DATASET_0:
+        news = _get_dataset_0()
 
     logger.info("Finished fetching news")
 
@@ -82,8 +72,9 @@ def get_news_labels(all_news: List[News]) -> np.array:
     return np.array([int(news.is_fake) for news in all_news])
 
 
-def get_word_to_vec_model(all_news: List[News]) -> Word2Vec:
-    model_path = str((Path(__file__).parent / "../data/word2vec.model").resolve())  # gensim expects path as string
+def get_word_to_vec_model(all_news: List[News], dataset: NewsDataset) -> Word2Vec:
+    # gensim expects path as string:
+    model_path = str((Path(__file__).parent / f"../data/word2vec-{dataset}.model").resolve())
 
     if path.exists(model_path):
         logger.info("Word2Vec model available...")
@@ -100,52 +91,32 @@ def get_word_to_vec_model(all_news: List[News]) -> Word2Vec:
     return model
 
 
-def _extract_news_from_csv(file, is_fake):
-    data = csv.DictReader(file)
+def _get_dataset_0() -> List[News]:
+    news = []
+    true_path = (Path(__file__).parent / "../data/dataset_0/True.csv").resolve()
+    fake_path = (Path(__file__).parent / "../data/dataset_0/Fake.csv").resolve()
 
-    return [
-        News(
-            news_id=f"news-{i}-{is_fake}",
-            title=Text(f"title-{i}-{is_fake}", row["title"]),
-            content=Text(f"content-{i}-{is_fake}", row["text"]),
-            subject=row["subject"],
-            is_fake=is_fake,
-            created_on=_format_date(row["date"])
-        )
-        for i, row in enumerate(data)
-        if _format_date(row["date"])  # Analysis showed that there are 10 articles without date
-    ]
+    def extract_news_from_csv(news_file, is_fake):
+        data = csv.DictReader(news_file)
 
+        return [
+            News(
+                news_id=f"news-{i}-{is_fake}",
+                title=Text(f"title-{i}-{is_fake}", row["title"]),
+                content=Text(f"content-{i}-{is_fake}", row["text"]),
+                subject=row["subject"],
+                is_fake=is_fake,
+            )
+            for i, row in enumerate(data)
+        ]
 
-def _format_date(date_str: str) -> Optional[date]:
-    for fmt in ("%B %d, %Y", "%y-%b-%d", "%b %d, %Y"):
-        try:
-            if fmt == "%B %d, %Y":
-                date_str = _add_leading_zero(date_str)
+    with open(true_path, 'r') as file:
+        news += extract_news_from_csv(file, False)
 
-            return datetime.strptime(date_str, fmt).date()
-        except ValueError:
-            pass
-    return None
+    with open(fake_path, 'r') as file:
+        news += extract_news_from_csv(file, True)
 
-
-def _add_leading_zero(date_str: str) -> str:
-    pattern = re.compile(r"[a-zA-Z]+ ([0-9]+), [0-9]+")
-
-    if date_str[-1] == ' ':
-        date_str = date_str[:-1]
-
-    found_items = pattern.findall(date_str)
-
-    if not found_items:
-        return date_str
-
-    day_of_month = int(found_items[0])
-
-    if day_of_month >= 10:
-        return date_str
-
-    return date_str.replace(' ', " 0", 1)
+    return news
 
 
 def _build_tweet(tweet_history: List[Tuple[SourceTweet, DestinationTweet]]) -> Tweet:
