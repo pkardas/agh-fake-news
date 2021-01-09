@@ -18,7 +18,7 @@ class NewsDataset(str, Enum):
     DATASET_2 = "dataset_2"  # Kaggle, True and Fake news, 26k items
 
 
-SELECTED_DATASET = NewsDataset.DATASET_2
+SELECTED_DATASET = NewsDataset.DATASET_1
 
 
 def return_saved_data(feature_extractor):
