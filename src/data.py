@@ -11,7 +11,7 @@ from gensim.models import Word2Vec, Phrases
 
 from src.news import News, Text
 from src.tweets import Tweet, TweetType
-from src.utils import cached, NewsDataset
+from src.utils import cached, Dataset
 
 logger = logging.getLogger()
 
@@ -23,7 +23,7 @@ SourceTweet = Tuple[UniqueId, TweetId, Delay]
 DestinationTweet = Tuple[UniqueId, TweetId, Delay]
 
 
-def get_news(dataset: NewsDataset, use_local: bool = True) -> List[News]:
+def get_news(dataset: Dataset, use_local: bool = True) -> List[News]:
     logger.info("Fetching news...")
 
     pickle_path = (Path(__file__).parent / f"../data/news-{dataset}.bin").resolve()
@@ -33,11 +33,11 @@ def get_news(dataset: NewsDataset, use_local: bool = True) -> List[News]:
 
     news = []
 
-    if dataset is NewsDataset.DATASET_0:
+    if dataset is Dataset.DATASET_0:
         news = _get_dataset_0()
-    if dataset is NewsDataset.DATASET_1:
+    if dataset is Dataset.DATASET_1:
         news = _get_dataset_1()
-    if dataset is NewsDataset.DATASET_2:
+    if dataset is Dataset.DATASET_2:
         news = _get_dataset_2()
 
     logger.info("Finished fetching news")
@@ -77,7 +77,7 @@ def get_news_labels(all_news: List[News]) -> np.array:
     return np.array([int(news.is_fake) for news in all_news])
 
 
-def get_word_to_vec_model(all_news: List[News], dataset: NewsDataset) -> Word2Vec:
+def get_word_to_vec_model(all_news: List[News], dataset: Dataset) -> Word2Vec:
     # gensim expects path as string:
     model_path = str((Path(__file__).parent / f"../data/word2vec-{dataset}.model").resolve())
 

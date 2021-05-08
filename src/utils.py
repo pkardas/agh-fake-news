@@ -12,13 +12,13 @@ from cachelib import SimpleCache
 logger = logging.getLogger()
 
 
-class NewsDataset(str, Enum):
+class Dataset(str, Enum):
     DATASET_0 = "dataset_0"  # Kaggle, True and Fake news, 45k items
     DATASET_1 = "dataset_1"  # BuzzFeed, True and Fake news, ~180 items
     DATASET_2 = "dataset_2"  # Kaggle, True and Fake news, 26k items
 
 
-SELECTED_DATASET = NewsDataset.DATASET_1
+SELECTED_DATASET = Dataset.DATASET_1
 
 
 def return_saved_data(feature_extractor):
