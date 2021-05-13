@@ -165,7 +165,7 @@ class AttributesAdder(BaseEstimator, TransformerMixin):
         logger.info(f"{len(x)} news to transform")
 
         result = np.c_[
-            # num_of_misspellings(x, self.dataset),
+            num_of_misspellings(x, self.dataset),
             num_of_unique_words(x, self.dataset),
             num_of_sentences(x, self.dataset),
             avg_num_of_adjectives(x, self.dataset),
