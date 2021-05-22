@@ -33,4 +33,6 @@ fig.update_layout(
     font_family="Times New Roman",
     xaxis_title="Basic Reproduction Number",
 )
+fig.add_vline(x=11.56, line_width=3, line_dash="dash", line_color="green")
+fig.add_vline(x=12.30, line_width=3, line_dash="dash", line_color="red")
 fig.show()

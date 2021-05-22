@@ -116,7 +116,7 @@ class Tweet:
         )
         networkx.draw_networkx_edges(tree, pos, width=1.0, alpha=0.5)
 
-        plt.show()
+        plt.savefig(f"./images/{self.tweet_type}/{self.unique_id}")
 
     def _get_graph(self) -> Graph:
         g = Graph()
@@ -147,7 +147,24 @@ def plot_all_tweets_propagation(all_tweets: List[Tweet]) -> None:
         layout=Layout(
             template="plotly_white",
             title=Title(text="Tweets propagation", x=0.5),
-            yaxis=YAxis(title="Cumulative number of retweets"),
-            xaxis=XAxis(title="Delay since root tweet"),
+            yaxis=YAxis(title="Skumulowana liczba tweetów"),
+            xaxis=XAxis(title="Czas od pojawiania się pierwszego wpisu [s]"),
         )
     ).show()
+
+
+def get_number_of_kernels(tweets: List[Tweet], tweet_type: TweetType, threshold: int) -> float:
+    filtered_tweets = [
+        tweet
+        for tweet in tweets
+        if tweet.tweet_type is tweet_type
+    ]
+
+    kernels = sum([
+        1
+        for tweet in filtered_tweets
+        for child in tweet.all_children
+        if len(child.children) > threshold
+    ])
+
+    return kernels / len(filtered_tweets)
