@@ -6,13 +6,16 @@ Purpose of this project is to build a classifier that can distinguish fake news 
 
 ### Detection
 
-Detection will be based on text features (NLP analysis). Also fake news propagation will be analysed.
+Detection was based on text features (NLP analysis). Also fake news propagation was analysed.
 
 ### Datasets
 
 All datasets are gathered here:
 
-👉 [/data](https://drive.google.com/drive/folders/1AMYyQXlme7CtBtVzrs8_OOJeplNI_f5f?usp=sharing)
+https://drive.google.com/drive/folders/1AMYyQXlme7CtBtVzrs8_OOJeplNI_f5f?usp=sharing
+
+### Thesis
+The paper contains results collected according to my best knowledge in 2020/2021.
 
 ### Development
 
